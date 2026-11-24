@@ -56,7 +56,9 @@ def patch_group_line(line: str) -> str:
             break  # health-check url and the remaining params stay untouched
         if not entry or entry.startswith("[]") or entry.startswith(EXCLUDE):
             continue
-        parts[i] = EXCLUDE + entry
+        # Keep the upstream search semantics (patterns such as "港" match
+        # mid-name) while anchoring only the exclusion at the start.
+        parts[i] = EXCLUDE + ".*?(?:" + entry + ")"
     return "`".join(parts)
 
 
@@ -77,7 +79,7 @@ def build(text: str) -> str:
     result = "\n".join(out)
     if PATCHED_GROUP not in result:
         sys.exit("self-check failed: patched group line missing")
-    if EXCLUDE + ".*" not in result:
+    if EXCLUDE + ".*?(?:" not in result:
         sys.exit("self-check failed: exclusion missing from select groups")
     return result
 
